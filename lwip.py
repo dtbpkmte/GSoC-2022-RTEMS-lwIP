@@ -92,6 +92,15 @@ common_source_files = [
     'rtemslwip/bsd_compat/rtems-kernel-program.c'
 ]
 
+stm32f4_drv_incl = ''
+stm32f4_drv_incl += './rtemslwip/stm32f4 '
+stm32f4_drv_incl += './stm32 '
+stm32f4_drv_incl += './stm32/driver '
+
+stm32f4_drv_src = ''
+stm32f4_drv_src += './stm32 '
+stm32f4_drv_src += './stm32/driver '
+
 
 def build(bld):
     source_files = []
@@ -156,7 +165,13 @@ def build(bld):
     lwip_obj_incl.extend(bsd_compat_incl)
     lwip_obj_incl.extend(common_includes)
 
-    bld(features='c',
+    # These files will only compile for STM32F4 BSPs
+    if bld.env.RTEMS_ARCH_BSP.startswith('arm-rtems6-stm32f4'):
+        driver_source.extend(walk_sources('./rtemslwip/stm32f4'))
+        drv_incl += stm32f4_drv_incl
+        driver_source.extend(walk_sources(stm32f4_drv_src))
+
+    bld(features ='c',
         target='lwip_obj',
         cflags='-g -Wall -O0',
         includes=' '.join(lwip_obj_incl),
