@@ -58,6 +58,16 @@ xilinx_aarch64_driver_source = [
     './embeddedsw/lib/bsp/standalone/src/common/xil_assert.c'
 ]
 
+stm32f4_drv_incl = ''
+stm32f4_drv_incl += './rtemslwip/stm32f4 '
+stm32f4_drv_incl += './stm32 '
+stm32f4_drv_incl += './stm32/driver '
+
+stm32f4_drv_src = ''
+stm32f4_drv_src += './stm32 '
+stm32f4_drv_src += './stm32/driver '
+
+
 def build(bld):
     source_files = []
     common_includes = './lwip/src/include ./uLan/ports/os/rtems ./rtemslwip/include '
@@ -119,6 +129,12 @@ def build(bld):
                 driver_source.extend(walk_sources('./rtemslwip/zynqmp_hardware'))
             driver_source.extend(xilinx_aarch64_driver_source)
             drv_incl += xilinx_aarch64_drv_incl
+
+    # These files will only compile for STM32F4 BSPs
+    if bld.env.RTEMS_ARCH_BSP.startswith('arm-rtems6-stm32f4'):
+        driver_source.extend(walk_sources('./rtemslwip/stm32f4'))
+        drv_incl += stm32f4_drv_incl
+        driver_source.extend(walk_sources(stm32f4_drv_src))
 
     bld(features ='c',
         target='lwip_obj',
