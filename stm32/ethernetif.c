@@ -19,7 +19,7 @@
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
+#include <bsp.h>
 #include "lwip/opt.h"
 #include "lwip/mem.h"
 #include "lwip/memp.h"
@@ -429,6 +429,7 @@ void pbuf_free_custom(struct pbuf *p)
 
 /* USER CODE BEGIN 6 */
 
+#ifndef __rtems__
 /**
 * @brief  Returns the current time in milliseconds
 *         when LWIP_TIMERS == 1 and NO_SYS == 1
@@ -439,6 +440,7 @@ u32_t sys_now(void)
 {
   return HAL_GetTick();
 }
+#endif /* __rtems__ */
 
 /* USER CODE END 6 */
 
