@@ -26,7 +26,10 @@
 
 #include <netstart.h>
 #include <lwip/tcpip.h>
-#include <ethernetif.h>
+#include "lwip.h"
+#include "lwip/init.h"
+#include "lwip/netif.h"
+#include "ethernetif.h"
 
 int start_networking(
   struct netif  *net_interface,
@@ -38,7 +41,15 @@ int start_networking(
 {
   tcpip_init( NULL, NULL );
   
-  netif_add(net_interface, ipaddr, netmask, gw, NULL, &ethernetif_init, &tcpip_input);
+  netif_add(
+    net_interface, 
+    ipaddr, 
+    netmask, 
+    gateway, 
+    NULL, 
+    ethernetif_init, 
+    tcpip_input
+  );
   
   netif_set_default(net_interface);
   
