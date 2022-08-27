@@ -47,6 +47,7 @@
 /* Global Variables ----------------------------------------------------------*/
 extern ETH_HandleTypeDef heth;
 
+#ifndef __rtems__
 /* LWIP init function */
 void MX_LWIP_Init(void);
 
@@ -62,6 +63,7 @@ void MX_LWIP_Process(void);
 /* USER CODE END 1 */
 #endif /* WITH_RTOS */
 
+#endif /* __rtems__ */
 #ifdef __cplusplus
 }
 #endif

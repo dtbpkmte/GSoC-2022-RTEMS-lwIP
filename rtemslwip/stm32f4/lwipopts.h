@@ -38,7 +38,7 @@
 /* STM32CubeMX Specific Parameters (not defined in opt.h) ---------------------*/
 /* Parameters set in STM32CubeMX LwIP Configuration GUI -*/
 /*----- WITH_RTOS disabled (Since FREERTOS is not set) -----*/
-#define WITH_RTOS 0
+#define WITH_RTOS 1
 /*----- CHECKSUM_BY_HARDWARE disabled -----*/
 #define CHECKSUM_BY_HARDWARE 0
 /*-----------------------------------------------------------------------------*/
@@ -50,11 +50,11 @@
 /*----- Value in opt.h for NO_SYS: 0 -----*/
 #define NO_SYS 0
 /*----- Value in opt.h for SYS_LIGHTWEIGHT_PROT: 1 -----*/
-#define SYS_LIGHTWEIGHT_PROT 0
+#define SYS_LIGHTWEIGHT_PROT 1
 /*----- Value in opt.h for MEM_ALIGNMENT: 1 -----*/
 #define MEM_ALIGNMENT 4
 /*----- Default Value for H7 devices: 0x30044000 -----*/
-#define LWIP_RAM_HEAP_POINTER 0x20017f58
+//#define LWIP_RAM_HEAP_POINTER 0x20017f58
 /*----- Value supported for H7 devices: 1 -----*/
 #define LWIP_SUPPORT_CUSTOM_PBUF 1
 /*----- Value in opt.h for LWIP_ETHERNET: LWIP_ARP || PPPOE_SUPPORT -*/
@@ -70,7 +70,7 @@
 /*----- Value in opt.h for TCP_WND_UPDATE_THRESHOLD: LWIP_MIN(TCP_WND/4, TCP_MSS*4) -----*/
 #define TCP_WND_UPDATE_THRESHOLD 536
 /*----- Value in opt.h for LWIP_NETIF_LINK_CALLBACK: 0 -----*/
-#define LWIP_NETIF_LINK_CALLBACK 1
+#define LWIP_NETIF_LINK_CALLBACK 0
 /*----- Value in opt.h for LWIP_NETCONN: 1 -----*/
 #define LWIP_NETCONN 1
 /*----- Value in opt.h for LWIP_SOCKET: 1 -----*/
@@ -107,7 +107,7 @@
 
 #define LWIP_NETIF_API 1
 
-#define NO_SYS_NO_TIMERS 0
+#define NO_SYS_NO_TIMERS 1
 
 #define IP_REASSEMBLY                   0
 #define IP_FRAG                         0
@@ -115,9 +115,19 @@
 #define LWIP_IPV6                       1
 
 #define LWIP_TCPIP_CORE_LOCKING         1
+#define TCPIP_THREAD_STACKSIZE 1024
+#define TCPIP_THREAD_PRIO 24
+#define TCPIP_MBOX_SIZE 6
+#define SLIPIF_THREAD_STACKSIZE 1024
+#define SLIPIF_THREAD_PRIO 3
+#define DEFAULT_THREAD_STACKSIZE 1024
+#define DEFAULT_THREAD_PRIO 3
+#define DEFAULT_UDP_RECVMBOX_SIZE 6
+#define DEFAULT_TCP_RECVMBOX_SIZE 6
+#define DEFAULT_ACCEPTMBOX_SIZE 6
 
 #define LWIP_DHCP                       1
-#define DHCP_DOES_ARP_CHECK             0
+#define DHCP_DOES_ARP_CHECK             1
 
 #define LWIP_DNS                        1
 

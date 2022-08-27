@@ -55,9 +55,19 @@ int start_networking(
   
   if (netif_is_link_up(net_interface)) {
     netif_set_up(net_interface);
+    
+    sys_thread_new(
+      "stm32f4_ethernet_link_thread",
+      ethernet_link_thread,
+      net_interface,
+      1024,
+      DEFAULT_THREAD_PRIO
+    );
+        
+    return 0;
   } else {
     netif_set_down(net_interface);
   }
 
-  return 0;
+  return -1;
 }
