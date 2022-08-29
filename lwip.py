@@ -191,3 +191,11 @@ def build(bld):
                 use='telnetd lwip rtemstest ftpd',
                 cflags='-g -Wall -O0',
                 includes=drv_incl + common_includes + './rtemslwip/test/ ' + os.path.relpath(os.path.join(arch_lib_path,'include')))
+                
+    bld.program(features='c',
+                target='tcp_echoserver.exe',
+                source='./rtemslwip/test/tcp_echoserver/init.c ./rtemslwip/test/tcp_echoserver/tcp_echoserver.c',
+                cflags='-g -Wall -O0',
+                use='lwip',
+                lib=['rtemscpu', 'rtemsbsp', 'rtemstest', 'lwip'],
+                includes=drv_incl + common_includes + './rtemslwip/test/ ' + os.path.relpath(os.path.join(arch_lib_path,'include')))
