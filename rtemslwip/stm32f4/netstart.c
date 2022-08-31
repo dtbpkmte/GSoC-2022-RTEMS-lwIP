@@ -41,6 +41,8 @@ int start_networking(
 {
   tcpip_init( NULL, NULL );
   
+  set_mac_addr(mac_ethernet_address);
+
   netif_add(
     net_interface, 
     ipaddr, 

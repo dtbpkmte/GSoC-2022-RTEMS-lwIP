@@ -70,13 +70,13 @@
 /*----- Value in opt.h for TCP_WND_UPDATE_THRESHOLD: LWIP_MIN(TCP_WND/4, TCP_MSS*4) -----*/
 #define TCP_WND_UPDATE_THRESHOLD 536
 /*----- Value in opt.h for LWIP_NETIF_LINK_CALLBACK: 0 -----*/
-#define LWIP_NETIF_LINK_CALLBACK 0
+//#define LWIP_NETIF_LINK_CALLBACK 0
 /*----- Value in opt.h for LWIP_NETCONN: 1 -----*/
 #define LWIP_NETCONN 1
 /*----- Value in opt.h for LWIP_SOCKET: 1 -----*/
 #define LWIP_SOCKET 1
 /*----- Value in opt.h for RECV_BUFSIZE_DEFAULT: INT_MAX -----*/
-#define RECV_BUFSIZE_DEFAULT 2000000000
+//#define RECV_BUFSIZE_DEFAULT 2000000000
 /*----- Value in opt.h for LWIP_STATS: 1 -----*/
 #define LWIP_STATS 0
 /*----- Value in opt.h for CHECKSUM_GEN_IP: 1 -----*/
@@ -107,7 +107,7 @@
 
 #define LWIP_NETIF_API 1
 
-#define NO_SYS_NO_TIMERS 1
+#define NO_SYS_NO_TIMERS 0
 
 #define IP_REASSEMBLY                   0
 #define IP_FRAG                         0
