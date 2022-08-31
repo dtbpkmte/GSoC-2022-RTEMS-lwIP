@@ -126,8 +126,7 @@ ETH_DMADescTypeDef  DMATxDscrTab[ETH_TX_DESC_CNT]; /* Ethernet Tx DMA Descriptor
 #ifndef __rtems__
 osSemaphoreId RxPktSemaphore = NULL;   /* Semaphore to signal incoming packets */
 osSemaphoreId TxPktSemaphore = NULL;   /* Semaphore to signal transmit packet complete */
-#endif /* __rtems__ */
-#ifdef __rtems__
+#else
 rtems_id RxPktSemaphore;   /* Semaphore to signal incoming packets */
 rtems_id TxPktSemaphore;   /* Semaphore to signal transmit packet complete */
 #endif /* __rtems__ */
@@ -135,6 +134,9 @@ rtems_id TxPktSemaphore;   /* Semaphore to signal transmit packet complete */
 /* Global Ethernet handle */
 ETH_HandleTypeDef heth;
 ETH_TxPacketConfig TxConfig;
+#ifdef __rtems__
+static uint8_t *MACAddr;
+#endif /* __rtems__ */
 
 /* Private function prototypes -----------------------------------------------*/
 int32_t ETH_PHY_IO_Init(void);
@@ -201,7 +203,12 @@ void HAL_ETH_ErrorCallback(ETH_HandleTypeDef *handlerEth)
 }
 
 /* USER CODE BEGIN 4 */
-
+#ifdef __rtems__
+void set_mac_addr(uint8_t *mac_addr)
+{
+  MACAddr = mac_addr;
+}
+#endif /* __rtems__ */
 /* USER CODE END 4 */
 
 /*******************************************************************************
@@ -227,23 +234,23 @@ static void low_level_init(struct netif *netif)
   ETH_MACConfigTypeDef MACConf = {0};
   /* Start ETH HAL Init */
 
+#ifndef __rtems__
    uint8_t MACAddr[6] ;
+#endif /* __rtems__ */
   heth.Instance = ETH;
-  /*
+#ifndef __rtems__
   MACAddr[0] = 0x02;
   MACAddr[1] = 0x00;
   MACAddr[2] = 0x00;
   MACAddr[3] = 0x00;
   MACAddr[4] = 0x00;
   MACAddr[5] = 0x01;
-  */
-  MACAddr[0] = 0x00;
-  MACAddr[1] = 0xd2;
-  MACAddr[2] = 0x79;
-  MACAddr[3] = 0x22;
-  MACAddr[4] = 0x22;
-  MACAddr[5] = 0x22;
+#endif /* __rtems__ */
+#ifndef __rtems__
   heth.Init.MACAddr = &MACAddr[0];
+#else
+  heth.Init.MACAddr = MACAddr;
+#endif /* __rtems__ */
   heth.Init.MediaInterface = HAL_ETH_RMII_MODE;
   heth.Init.TxDesc = DMATxDscrTab;
   heth.Init.RxDesc = DMARxDscrTab;
