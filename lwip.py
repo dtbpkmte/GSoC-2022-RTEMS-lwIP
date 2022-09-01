@@ -92,14 +92,15 @@ common_source_files = [
     'rtemslwip/bsd_compat/rtems-kernel-program.c'
 ]
 
-stm32f4_drv_incl = ''
-stm32f4_drv_incl += './rtemslwip/stm32f4 '
-stm32f4_drv_incl += './stm32 '
-stm32f4_drv_incl += './stm32/driver '
+stm32f4_drv_incl = [
+    'rtemslwip/stm32f4',
+    'stm32',
+    'stm32/driver'
+]
 
 stm32f4_drv_src = [
-    './stm32',
-    './stm32/driver'
+    'stm32',
+    'stm32/driver'
 ]
 
 
@@ -160,18 +161,18 @@ def build(bld):
                 driver_source.extend(walk_sources('rtemslwip/zynqmp_hardware'))
             driver_source.extend(xilinx_aarch64_driver_source)
             drv_incl.extend(xilinx_aarch64_drv_incl)
+            
+    # These files will only compile for STM32F4 BSPs
+    if bld.env.RTEMS_ARCH_BSP.startswith('arm-rtems6-stm32f4'):
+        driver_source.extend(walk_sources('rtemslwip/stm32f4'))
+        drv_incl.extend(stm32f4_drv_incl)
+        for s in stm32f4_drv_src:
+            driver_source.extend(walk_sources(s))
 
     lwip_obj_incl = []
     lwip_obj_incl.extend(drv_incl)
     lwip_obj_incl.extend(bsd_compat_incl)
     lwip_obj_incl.extend(common_includes)
-
-    # These files will only compile for STM32F4 BSPs
-    if bld.env.RTEMS_ARCH_BSP.startswith('arm-rtems6-stm32f4'):
-        driver_source.extend(walk_sources('./rtemslwip/stm32f4'))
-        drv_incl += stm32f4_drv_incl
-        for s in stm32f4_drv_src:
-            driver_source.extend(walk_sources(s))
 
     bld(features ='c',
         target='lwip_obj',
