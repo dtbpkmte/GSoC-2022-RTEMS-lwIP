@@ -26,7 +26,10 @@
 
 #include <netstart.h>
 #include <lwip/tcpip.h>
-#include <ethernetif.h>
+#include "lwip.h"
+#include "lwip/init.h"
+#include "lwip/netif.h"
+#include "ethernetif.h"
 
 int start_networking(
   struct netif  *net_interface,
@@ -38,15 +41,35 @@ int start_networking(
 {
   tcpip_init( NULL, NULL );
   
-  netif_add(net_interface, ipaddr, netmask, gw, NULL, &ethernetif_init, &tcpip_input);
+  set_mac_addr(mac_ethernet_address);
+
+  netif_add(
+    net_interface, 
+    &ipaddr->u_addr.ip4, 
+    &netmask->u_addr.ip4, 
+    &gateway->u_addr.ip4, 
+    NULL, 
+    ethernetif_init, 
+    tcpip_input
+  );
   
   netif_set_default(net_interface);
   
   if (netif_is_link_up(net_interface)) {
     netif_set_up(net_interface);
+    
+    sys_thread_new(
+      "stm32f4_ethernet_link_thread",
+      ethernet_link_thread,
+      net_interface,
+      1024,
+      DEFAULT_THREAD_PRIO
+    );
+        
+    return 0;
   } else {
     netif_set_down(net_interface);
   }
 
-  return 0;
+  return -1;
 }
