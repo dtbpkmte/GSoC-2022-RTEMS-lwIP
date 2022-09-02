@@ -23,23 +23,31 @@
 
 #include "lwip/err.h"
 #include "lwip/netif.h"
+#ifndef __rtems__
+#include "cmsis_os.h"
+#endif /* __rtems__ */
 
 /* Within 'USER CODE' section, code will be kept by default at each generation */
 /* USER CODE BEGIN 0 */
-
+#ifdef __rtems__
+void set_mac_addr(uint8_t *mac_addr);
+#endif /* __rtems__ */
 /* USER CODE END 0 */
 
 /* Exported functions ------------------------------------------------------- */
 err_t ethernetif_init(struct netif *netif);
 
-void ethernetif_input(struct netif *netif);
-void ethernet_link_check_state(struct netif *netif);
+void ethernetif_input(void* argument);
+void ethernet_link_thread(void* argument );
 
 void Error_Handler(void);
 u32_t sys_jiffies(void);
+#ifndef __rtems__
 u32_t sys_now(void);
+#endif /* __rtems__ */
 
 /* USER CODE BEGIN 1 */
 
 /* USER CODE END 1 */
 #endif
+
