@@ -92,6 +92,20 @@ common_source_files = [
     'rtemslwip/bsd_compat/rtems-kernel-program.c'
 ]
 
+stm32_drv_incl = [
+    'stm32',
+    'stm32/driver'
+]
+
+stm32_drv_src = [
+    'stm32/ethernetif.c',
+    'stm32/driver/dp83848.c'
+]
+
+stm32_stm32f4_drv_incl = [
+    'rtemslwip/stm32f4'
+]
+
 
 def build(bld):
     source_files = []
@@ -126,6 +140,13 @@ def build(bld):
             drv_incl.append('rtemslwip/beaglebone')
             drv_incl.append('cpsw/src/include')
             driver_source.extend(walk_sources('cpsw/src'))
+
+        # These files will only compile for STM32F4 BSPs
+        if bsp == 'stm32f4':
+            driver_source.extend(walk_sources('rtemslwip/stm32f4'))
+            drv_incl.extend(stm32_drv_incl)
+            driver_source.extend(stm32_drv_src)
+            drv_incl.extend(stm32_stm32f4_drv_incl)
 
 
     # These files will only compile for BSPs on Xilinx hardware
