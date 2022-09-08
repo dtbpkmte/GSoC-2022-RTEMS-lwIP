@@ -19,7 +19,12 @@
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
+#ifndef __rtems__
 #include "main.h"
+#else
+#include <bsp.h>
+#include <bsp/irq.h>
+#endif /* __rtems__ */
 #include "lwip/opt.h"
 #include "lwip/timeouts.h"
 #include "netif/ethernet.h"
@@ -28,7 +33,9 @@
 #include "ethernetif.h"
 #include "dp83848.h"
 #include <string.h>
+#ifndef __rtems__
 #include "cmsis_os.h"
+#endif /* __rtems__ */
 #include "lwip/tcpip.h"
 
 /* Within 'USER CODE' section, code will be kept by default at each generation */
@@ -38,7 +45,12 @@
 
 /* Private define ------------------------------------------------------------*/
 /* The time to block waiting for input. */
+#ifndef __rtems__
 #define TIME_WAITING_FOR_INPUT ( portMAX_DELAY )
+#else
+#define TIME_WAITING_FOR_INPUT ( RTEMS_NO_TIMEOUT )
+#endif /* __rtems__ */
+
 /* USER CODE BEGIN OS_THREAD_STACK_SIZE_WITH_RTOS */
 /* Stack size of the interface thread */
 #define INTERFACE_THREAD_STACK_SIZE ( 350 )
@@ -109,12 +121,20 @@ ETH_DMADescTypeDef  DMATxDscrTab[ETH_TX_DESC_CNT]; /* Ethernet Tx DMA Descriptor
 
 /* USER CODE END 2 */
 
+#ifndef __rtems__
 osSemaphoreId RxPktSemaphore = NULL;   /* Semaphore to signal incoming packets */
 osSemaphoreId TxPktSemaphore = NULL;   /* Semaphore to signal transmit packet complete */
+#else
+rtems_id RxPktSemaphore;   /* Semaphore to signal incoming packets */
+rtems_id TxPktSemaphore;   /* Semaphore to signal transmit packet complete */
+#endif /* __rtems__ */
 
 /* Global Ethernet handle */
 ETH_HandleTypeDef heth;
 ETH_TxPacketConfig TxConfig;
+#ifdef __rtems__
+static uint8_t *MACAddr;
+#endif /* __rtems__ */
 
 /* Private function prototypes -----------------------------------------------*/
 int32_t ETH_PHY_IO_Init(void);
@@ -144,7 +164,11 @@ void pbuf_free_custom(struct pbuf *p);
   */
 void HAL_ETH_RxCpltCallback(ETH_HandleTypeDef *handlerEth)
 {
+#ifndef __rtems__
   osSemaphoreRelease(RxPktSemaphore);
+#else
+  rtems_semaphore_release(RxPktSemaphore);
+#endif /* __rtems__ */
 }
 /**
   * @brief  Ethernet Tx Transfer completed callback
@@ -153,7 +177,11 @@ void HAL_ETH_RxCpltCallback(ETH_HandleTypeDef *handlerEth)
   */
 void HAL_ETH_TxCpltCallback(ETH_HandleTypeDef *handlerEth)
 {
+#ifndef __rtems__
   osSemaphoreRelease(TxPktSemaphore);
+#else
+  rtems_semaphore_release(TxPktSemaphore);
+#endif /* __rtems__ */
 }
 /**
   * @brief  Ethernet DMA transfer error callback
@@ -164,12 +192,22 @@ void HAL_ETH_ErrorCallback(ETH_HandleTypeDef *handlerEth)
 {
   if((HAL_ETH_GetDMAError(handlerEth) & ETH_DMASR_RBUS) == ETH_DMASR_RBUS)
   {
+#ifndef __rtems__
     osSemaphoreRelease(RxPktSemaphore);
+#else
+    rtems_semaphore_release(RxPktSemaphore);
+#endif /* __rtems__ */
   }
 }
 
 /* USER CODE BEGIN 4 */
 
+#ifdef __rtems__
+void set_mac_addr(uint8_t *mac_addr)
+{
+  MACAddr = mac_addr;
+}
+#endif /* __rtems__ */
 /* USER CODE END 4 */
 
 /*******************************************************************************
@@ -186,15 +224,20 @@ static void low_level_init(struct netif *netif)
 {
   HAL_StatusTypeDef hal_eth_init_status = HAL_OK;
 /* USER CODE BEGIN OS_THREAD_ATTR_CMSIS_RTOS_V2 */
+#ifndef __rtems__
   osThreadAttr_t attributes;
+#endif /* __rtems__ */
 /* USER CODE END OS_THREAD_ATTR_CMSIS_RTOS_V2 */
   uint32_t duplex, speed = 0;
   int32_t PHYLinkState = 0;
   ETH_MACConfigTypeDef MACConf = {0};
   /* Start ETH HAL Init */
 
+#ifndef __rtems__
    uint8_t MACAddr[6] ;
+#endif /* __rtems__ */
   heth.Instance = ETH;
+#ifndef __rtems__
   MACAddr[0] = 0x02;
   MACAddr[1] = 0x00;
   MACAddr[2] = 0x00;
@@ -202,6 +245,9 @@ static void low_level_init(struct netif *netif)
   MACAddr[4] = 0x00;
   MACAddr[5] = 0x01;
   heth.Init.MACAddr = &MACAddr[0];
+#else
+  heth.Init.MACAddr = MACAddr;
+#endif /* __rtems__ */
   heth.Init.MediaInterface = HAL_ETH_RMII_MODE;
   heth.Init.TxDesc = DMATxDscrTab;
   heth.Init.RxDesc = DMARxDscrTab;
@@ -248,18 +294,48 @@ static void low_level_init(struct netif *netif)
   #endif /* LWIP_ARP */
 
   /* create a binary semaphore used for informing ethernetif of frame reception */
+#ifndef __rtems__
   RxPktSemaphore = osSemaphoreNew(1, 1, NULL);
+#else
+  rtems_semaphore_create(
+    rtems_build_name('R', 'x', 'p', 'k'),
+    1,
+    RTEMS_SIMPLE_BINARY_SEMAPHORE,
+    0,
+    &RxPktSemaphore
+  );
+#endif /* __rtems__ */
 
   /* create a binary semaphore used for informing ethernetif of frame transmission */
+#ifndef __rtems__
   TxPktSemaphore = osSemaphoreNew(1, 1, NULL);
+#else
+  rtems_semaphore_create(
+    rtems_build_name('T', 'x', 'p', 'k'),
+    1,
+    RTEMS_SIMPLE_BINARY_SEMAPHORE,
+    0,
+    &TxPktSemaphore
+  );
+#endif /* __rtems__ */
 
   /* create the task that handles the ETH_MAC */
 /* USER CODE BEGIN OS_THREAD_NEW_CMSIS_RTOS_V2 */
+#ifndef __rtems__
   memset(&attributes, 0x0, sizeof(osThreadAttr_t));
   attributes.name = "EthIf";
   attributes.stack_size = INTERFACE_THREAD_STACK_SIZE;
   attributes.priority = osPriorityRealtime;
   osThreadNew(ethernetif_input, netif, &attributes);
+#else
+  sys_thread_new(
+    "ethernetif_input_thread",
+    ethernetif_input,
+    netif,
+    RTEMS_MINIMUM_STACK_SIZE,
+    DEFAULT_THREAD_PRIO
+  );
+#endif /* __rtem__ */
 /* USER CODE END OS_THREAD_NEW_CMSIS_RTOS_V2 */
 
 /* USER CODE BEGIN PHY_PRE_CONFIG */
@@ -313,6 +389,15 @@ static void low_level_init(struct netif *netif)
     MACConf.Speed = speed;
     HAL_ETH_SetMACConfig(&heth, &MACConf);
 
+#ifdef __rtems__
+    rtems_interrupt_handler_install(
+            STM32F4_IRQ_ETH,
+            NULL,
+            RTEMS_INTERRUPT_UNIQUE,
+            HAL_ETH_IRQHandler,
+            &heth
+    );
+#endif /* __rtems__ */
     HAL_ETH_Start_IT(&heth);
     netif_set_up(netif);
     netif_set_link_up(netif);
@@ -387,7 +472,12 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p)
   pbuf_ref(p);
 
   HAL_ETH_Transmit_IT(&heth, &TxConfig);
+#ifndef __rtems__
   while(osSemaphoreAcquire(TxPktSemaphore, TIME_WAITING_FOR_INPUT)!=osOK)
+#else
+  while (rtems_semaphore_obtain(TxPktSemaphore, RTEMS_DEFAULT_OPTIONS, 
+          TIME_WAITING_FOR_INPUT) != RTEMS_SUCCESSFUL) 
+#endif /* __rtems__ */
 
   {
   }
@@ -433,7 +523,12 @@ void ethernetif_input(void* argument)
 
   for( ;; )
   {
+#ifndef __rtems__
     if (osSemaphoreAcquire(RxPktSemaphore, TIME_WAITING_FOR_INPUT) == osOK)
+#else
+    if (rtems_semaphore_obtain(RxPktSemaphore, RTEMS_DEFAULT_OPTIONS,
+            TIME_WAITING_FOR_INPUT) == RTEMS_SUCCESSFUL)
+#endif /* __rtems__ */
     {
       do
       {
@@ -545,12 +640,17 @@ void pbuf_free_custom(struct pbuf *p)
   if (RxAllocStatus == RX_ALLOC_ERROR)
   {
     RxAllocStatus = RX_ALLOC_OK;
+#ifndef __rtems__
     osSemaphoreRelease(RxPktSemaphore);
+#else
+    rtems_semaphore_release(RxPktSemaphore);
+#endif /* __rtems__ */
   }
 }
 
 /* USER CODE BEGIN 6 */
 
+#ifndef __rtems__
 /**
 * @brief  Returns the current time in milliseconds
 *         when LWIP_TIMERS == 1 and NO_SYS == 1
@@ -561,6 +661,7 @@ u32_t sys_now(void)
 {
   return HAL_GetTick();
 }
+#endif /* __rtems__ */
 
 /* USER CODE END 6 */
 
@@ -611,8 +712,10 @@ void HAL_ETH_MspInit(ETH_HandleTypeDef* ethHandle)
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
     /* Peripheral interrupt init */
+#ifndef __rtems__
     HAL_NVIC_SetPriority(ETH_IRQn, 5, 0);
     HAL_NVIC_EnableIRQ(ETH_IRQn);
+#endif /* __rtems__ */
   /* USER CODE BEGIN ETH_MspInit 1 */
 
   /* USER CODE END ETH_MspInit 1 */
@@ -799,7 +902,11 @@ void ethernet_link_thread(void* argument)
 
 /* USER CODE END ETH link Thread core code for User BSP */
 
+#ifndef __rtems__
     osDelay(100);
+#else
+    sys_arch_delay(100);
+#endif /* __rtems__ */
   }
 }
 
